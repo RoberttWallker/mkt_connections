@@ -11,7 +11,7 @@ def main():
 
     bat_content = f"""
         @echo off
-        cd "{str(ROOT_PATH)}"
+        pushd "{str(ROOT_PATH)}"
         call venv\\Scripts\\activate
         python "{str(py_file)}"
         pause
