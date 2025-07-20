@@ -13,7 +13,8 @@ logging.basicConfig(
     filename='log_download_all_data.log',  # Nome do arquivo de log
     level=logging.INFO,  # Nível mínimo de mensagens a registrar
     format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%d-%m-%Y %H:%M:%S'
+    datefmt='%d-%m-%Y %H:%M:%S',
+    encoding='utf-8'
 )
 
 if __name__ == "__main__":
@@ -28,18 +29,37 @@ if __name__ == "__main__":
     fields_principal = [
         "impressions","reach","cpm","ctr","ad_id"
     ]
+    
+    try:
+        logging.info("\n####### INÍCIO: Marketing Actions #######")
+        connection.marketing_actions(fields_marketing_actions)
+        logging.info("✅ Marketing Actions finalizado com sucesso.")
+        logging.info("####### FIM: Marketing Actions #######\n")
+
+    except Exception as e:
+        logging.exception(f"❌ Erro durante execução de marketing_actions() [Actions] - {e}\n")
+
+    # -----------------------------------------------
 
     try:
-        logging.info("Executando Marketing Actions...")
-        connection.marketing_actions(fields_marketing_actions)
-        logging.info("Marketing Actions Finalizado.")
-        
+        logging.info("\n####### INÍCIO: Marketing Principal #######")
+        connection.marketing_actions(fields_principal)
+        logging.info("✅ Marketing Principal finalizado com sucesso.")
+        logging.info("####### FIM: Marketing Principal #######\n")
+
     except Exception as e:
-        logging.exception(f"Erro durante execução de marketing_actions() {e}")
-        
+        logging.exception(f"❌ Erro durante execução de marketing_actions() [Principal] - {e}\n")
+
+    # -----------------------------------------------
+
     try:
-        logging.info("Executando Marketing Principal...")
-        connection.marketing_actions(fields_principal)                
-        logging.info("Marketing Principal Finalizado.")
+        levels = ["ads", "adsets", "campaigns"]  # corrigido 'campaings'
+
+        for level in levels:
+            logging.info(f"\n####### INÍCIO: Marketing Status - {level.upper()} #######")
+            connection.marketing_status(level)
+            logging.info(f"✅ Marketing Status para {level.upper()} finalizado com sucesso.")
+            logging.info(f"####### FIM: Marketing Status - {level.upper()} #######\n")
+
     except Exception as e:
-        logging.exception(f"Erro durante execução de marketing_actions() {e}")
+        logging.exception(f"❌ Erro durante execução de marketing_status() - {e}\n")

@@ -1,5 +1,5 @@
 venv/
 .env
 *.log
-*mkt_principal.json
-*mkt_act_and_act_values.json
+*.json
+

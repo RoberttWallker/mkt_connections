@@ -1,7 +1,9 @@
 import requests
 import json
 from dotenv import load_dotenv
+
 load_dotenv()
+
 import os
 from datetime import datetime
 import time
@@ -15,6 +17,7 @@ BASE_URL = "https://graph.facebook.com/v23.0/"
 PATH = "/insights"
 
 ROOT_PATH = Path(__file__).resolve().parent.parent
+data_path = ROOT_PATH / "data"
 
 def marketing_actions(fields):
     # Data atual
@@ -84,18 +87,49 @@ def marketing_actions(fields):
         print(f"\n📦 Tamanho total acumulado de registros: {len(all_data)} | Total de bytes: {total_bytes_global}")
 
         #Caminho da pasta /data na raiz do projeto
-        pasta_data = ROOT_PATH / "data"
-        pasta_data.mkdir(exist_ok=True)  # Cria a pasta se não existir
+        
+        data_path.mkdir(exist_ok=True)  # Cria a pasta se não existir
 
         # Nome do arquivo
         if "reach" in fields:
-            caminho_arquivo = pasta_data / "mkt_principal.json"
+            caminho_arquivo = data_path / "mkt_principal.json"
         else:
-            caminho_arquivo = pasta_data / "mkt_act_and_act_values.json"
+            caminho_arquivo = data_path / "mkt_act_and_act_values.json"
 
         with open(caminho_arquivo, "w", encoding="utf-8") as file:
             file.write(json.dumps(all_data, indent=4, ensure_ascii=False))
 
     return print("Processo de download concluído.")
 
+def marketing_status(level):
+    url = f"{BASE_URL}{ACCOUNT_ID}/{level}"
+    
+    fields = "id","name","status"
+    
+    params = {
+        "fields": ",".join(fields),
+        "access_token": ACCESS_TOKEN
+    }
 
+    response = requests.get(url, params=params)
+
+    print(f"📡 Status: {response.status_code}")
+
+    if response.status_code != 200:
+        raise Exception(f"Erro na API: {response.status_code} - {response.text}")
+    
+    result = response.json()
+
+    data_path.mkdir(exist_ok=True)  # Cria a pasta se não existir
+    
+    if level == "campaigns":
+        caminho_arquivo = data_path / "campaings_status.json"
+    if level == "adsets":
+        caminho_arquivo = data_path / "adsets_status.json"
+    if level == "ads":
+        caminho_arquivo = data_path / "ads_status.json"
+
+    with open(caminho_arquivo, "w", encoding="utf-8") as file:
+        file.write(json.dumps(result, indent=4, ensure_ascii=False))
+    
+    return print("Processo de download concluído.")
