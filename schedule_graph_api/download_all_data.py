@@ -27,7 +27,7 @@ if __name__ == "__main__":
     ]
 
     fields_principal = [
-        "impressions","reach","cpm","ctr","ad_id"
+        "spend","impressions","reach","cpm","ctr","ad_id"
     ]
     
     try:
