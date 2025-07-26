@@ -1,11 +1,13 @@
+import sys
+import webbrowser
 import requests
 import json
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values, set_key
 
 load_dotenv()
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from dateutil.relativedelta import relativedelta
 from pathlib import Path
@@ -13,11 +15,26 @@ from pathlib import Path
 ACCOUNT_ID = os.getenv("ACCOUNT_ID")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 
-BASE_URL = "https://graph.facebook.com/v23.0/"
-PATH = "/insights"
+APP_ID = os.getenv("APP_ID")
+APP_SECRET = os.getenv("APP_SECRET")
 
-ROOT_PATH = Path(__file__).resolve().parent.parent
+BASE_URL = "https://graph.facebook.com/v23.0/"
+INSIGHTS_PATH = "/insights"
+ACCESS_TOKEN_PATH = "/access_token"
+
+def get_root_path():
+    """Retorna o caminho absoluto para a raiz do projeto"""
+    if getattr(sys, 'frozen', False):
+        # Se empacotado como executável
+        return Path(sys.executable).parent
+    else:
+        # Em desenvolvimento
+        return Path(__file__).resolve().parent.parent
+
+ROOT_PATH = get_root_path()
 data_path = ROOT_PATH / "data"
+today = datetime.now()
+validity = today + timedelta(days=45)
 
 def marketing_actions(fields):
     # Data atual
@@ -54,7 +71,7 @@ def marketing_actions(fields):
             "access_token": ACCESS_TOKEN
         }
 
-        url = f"{BASE_URL}{ACCOUNT_ID}{PATH}"
+        url = f"{BASE_URL}{ACCOUNT_ID}{INSIGHTS_PATH}"
         total_bytes_month = 0
 
         while url:
@@ -133,3 +150,68 @@ def marketing_status(level):
         file.write(json.dumps(result, indent=4, ensure_ascii=False))
     
     return print("Processo de download concluído.")
+
+def generate_auth_url():
+    params = {
+        "client_id": APP_ID,  # Substitua pelo seu App ID
+        "redirect_uri": r"file:\\\C:\Users\Robert Walker\Desktop\Trabalho\PROJETOS\POWER BI\4_projetos_negociados\fgz_treinamentos\flask\app_graph_api\callback.html",  # Exibe o código na página do Facebook
+        "response_type": "code",
+        "scope": "read_insights,ads_management,public_profile",
+    }
+
+    auth_url = "https://www.facebook.com/v23.0/dialog/oauth?" + "&".join(
+        [f"{key}={value}" for key, value in params.items()]
+    )
+
+    webbrowser.open(auth_url)
+
+def convert_short_lived_token_to_long_lived_token(app_id, app_secret, short_lived_token):
+    params = {
+        "grant_type": "fb_exchange_token",
+        "client_id": app_id,  # Substitua pelo seu App ID real
+        "client_secret": app_secret,  # Substitua pelo seu App Secret real
+        "fb_exchange_token": short_lived_token,  # Substitua pelo token de curta duração
+    }
+
+    response = requests.get(
+        f"https://graph.facebook.com/v23.0/oauth{ACCESS_TOKEN_PATH}",
+        params=params
+    )
+
+    if response.status_code == 200:
+        print("Token de longa duração:", response.json())
+    else:
+        print("Erro:", response.json())
+
+    access_token = response.json().get("access_token")
+
+    return access_token
+
+def update_long_lived_access_token(short_lived_token):
+    try:
+        new_token = convert_short_lived_token_to_long_lived_token(APP_ID, APP_SECRET, short_lived_token)
+        if not new_token:
+            return {
+                "status": "ERRO",
+                "message": "Token inválido ou expirado"
+            }
+        
+        env_path = ROOT_PATH / '.env'
+        env_vars = dotenv_values(env_path)
+        env_vars['ACCESS_TOKEN'] = new_token
+        env_vars['ACCESS_TOKEN_VALIDITY'] = datetime.strftime(validity, "%d/%m/%Y")
+
+        for key, value in env_vars.items():
+            set_key(env_path, key, value) # type: ignore
+            
+        return {
+            "status": "OK",
+            "message": "Token atualizado com sucesso"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "ERRO",
+            "message": f"Erro ao atualizar token: {str(e)}"
+        }
+    
