@@ -1,7 +1,7 @@
 from pathlib import Path
 
 ROOT_PATH = Path(__file__).resolve().parent.parent
-schedule_path = ROOT_PATH / "schedule_graph_api"
+schedule_path = ROOT_PATH / "app_schedule"
 
 download_all_data = schedule_path / "download_all_data.py"
 check_token_validity = schedule_path / "check_token_validity.py"
@@ -27,8 +27,8 @@ def automation():
     with open(bat_file, "w") as bat:
         bat.write(bat_content)
 
-    with open(vbs_file, "w") as bat:
-        bat.write(vbs_content)
+    with open(vbs_file, "w") as vbs:
+        vbs.write(vbs_content)
 
 def check_validity():
     bat_file = schedule_path / "check_token_validity.bat"
@@ -51,8 +51,8 @@ def check_validity():
     with open(bat_file, "w") as bat:
         bat.write(bat_content)
 
-    with open(vbs_file, "w") as bat:
-        bat.write(vbs_content)
+    with open(vbs_file, "w") as vbs:
+        vbs.write(vbs_content)
 
 def main():
     check_validity()
