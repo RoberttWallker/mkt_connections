@@ -1,7 +1,6 @@
 import sys
 import os
 import logging
-from datetime import datetime
 
 # Adiciona o diretório raiz do projeto ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

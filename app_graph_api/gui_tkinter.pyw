@@ -1,42 +1,7 @@
-from datetime import datetime
-import os
 from tkinter import END, Tk, Label, Entry, Button, messagebox
 from dotenv import load_dotenv
 load_dotenv()
 import connection
-
-# def open_token_input_gui():
-#     def on_submit():
-#         token = token_entry.get()
-#         if token:
-#             status = connection.update_long_lived_access_token(token)
-#             if status.get("status") == "OK":
-#                 messagebox.showinfo(
-#                     "Sucesso",  # Título da janela
-#                     f"Token atualizado com sucesso no arquivo:\n\n{os.path.abspath('.env')}\n\n"
-#                     f"Data/hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"  # Timestamp
-#                 )
-#             else:
-#                 messagebox.showinfo("Erro ao atualizar o arquivo .env!")
-#             root.destroy()
-#         else:
-#             messagebox.showwarning("Aviso", "Por favor, insira um token válido")
-
-#     # Configuração da janela
-#     root = Tk()
-#     root.title("Atualizador de Token Facebook")
-#     root.geometry("400x150")
-    
-#     # Elementos da interface
-#     Label(root, text="Insira o Token Temporário do Facebook:", pady=10).pack()
-    
-#     token_entry = Entry(root, width=50)
-#     token_entry.pack(pady=5)
-    
-#     submit_btn = Button(root, text="Atualizar Token", command=on_submit)
-#     submit_btn.pack(pady=10)
-    
-#     root.mainloop()
 
 def open_token_input_gui():
     def on_submit():

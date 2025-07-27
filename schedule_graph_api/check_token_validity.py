@@ -1,4 +1,3 @@
-import sys
 import os
 import logging
 from datetime import datetime
@@ -9,9 +8,6 @@ load_dotenv()
 
 today = datetime.now()
 validity = os.getenv("ACCESS_TOKEN_VALIDITY")
-
-# Adiciona o diretório raiz do projeto ao sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Configuração do logging
 logging.basicConfig(

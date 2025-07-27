@@ -12,6 +12,9 @@ import time
 from dateutil.relativedelta import relativedelta
 from pathlib import Path
 
+today = datetime.now()
+validity = today + timedelta(days=45)
+
 ACCOUNT_ID = os.getenv("ACCOUNT_ID")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 
@@ -33,8 +36,6 @@ def get_root_path():
 
 ROOT_PATH = get_root_path()
 data_path = ROOT_PATH / "data"
-today = datetime.now()
-validity = today + timedelta(days=45)
 
 def marketing_actions(fields):
     # Data atual
