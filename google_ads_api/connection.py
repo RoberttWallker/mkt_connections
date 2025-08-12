@@ -35,7 +35,7 @@ ROOT_PATH = get_root_path()
 
 def create_authorization_code():
     try:
-        print("Criando pelo método 1, caso haja")
+        print("Tentando criar pelo método 1 (interno):\n")
         flow = InstalledAppFlow.from_client_config(
             {
                 "installed": {
@@ -50,25 +50,45 @@ def create_authorization_code():
         )
 
         # Abre o navegador para autenticação e captura o token
-        credentials = flow.run_local_server(port=8080, request=UnsafeRequestsSession())
+        credentials = flow.run_local_server(port=8080)
 
         # Mostra o refresh token
         print("\n✅ Refresh Token gerado com sucesso:")
         print(credentials.refresh_token)
+    
+    except Exception as e:
+        print(f"\nOcorreu o seguninte erro: {e}\n")
+        print("Iniciando método direto pelo navegador...")
+        print("Não esqueça de colar o token de acesso no software de consumo de dados.")
 
-google_link = (
-    f"https://accounts.google.com/o/oauth2/v2/auth?"
-    f"client_id={os.getenv('CLIENT_ID')}&"
-    "redirect_uri=urn:ietf:wg:oauth:2.0:oob&"
-    "response_type=code&"
-    "scope=https://www.googleapis.com/auth/adwords&"
-    "access_type=offline&"
-    "prompt=consent"
-)
+        try:
+            print("\nTentando criar pelo método 2 (externo):\n")
+            google_link = (
+                f"https://accounts.google.com/o/oauth2/v2/auth?"
+                f"client_id={os.getenv('CLIENT_ID')}&"
+                "redirect_uri=urn:ietf:wg:oauth:2.0:oob&"
+                "response_type=code&"
+                "scope=https://www.googleapis.com/auth/adwords&"
+                "access_type=offline&"
+                "prompt=consent"
+            )
+
+            if webbrowser.open(google_link):
+                print("\n✅ Link aberto no navegador com sucesso!")
+            else:
+                print("\n⚠ Não foi possível abrir o navegador automaticamente.")
+                print(f"Acesse manualmente o link abaixo:\n{google_link}")
+
+            print("\n📌 Passo a passo:")
+            print("1. No navegador, faça login na conta Google desejada.")
+            print("2. Aceite as permissões solicitadas.")
+            print("3. Será exibido um código de autorização na tela.")
+            print("4. Copie esse código e cole no seu software de consumo de dados.")
 
 
-#webbrowser.open(google_link)
-
+        except Exception as e:
+            print(f"Ocorreu o seguninte erro: {e}\n")
+            print("Verifique se o fluxo de autenticação está correto!")
 
 def exchange_code_for_tokens(auth_code):
     token_url = "https://oauth2.googleapis.com/token"
@@ -97,4 +117,7 @@ def exchange_code_for_tokens(auth_code):
         print(response.text)
         return None, None
     
-exchange_code_for_tokens("4/1AVMBsJiRoy4QKAkcnqhVS1PYL6K3jhtKHAHw7hdGfFCMwtwbNwpqDOYiYLA")
+#exchange_code_for_tokens("4/1AVMBsJiRoy4QKAkcnqhVS1PYL6K3jhtKHAHw7hdGfFCMwtwbNwpqDOYiYLA")
+
+create_authorization_code()
+
