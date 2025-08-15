@@ -13,14 +13,30 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request as gRequest
 import webbrowser
 
-
 load_dotenv()
+today = datetime.today()
 
-class UnsafeRequestsSession(gRequest):
-    def __init__(self):
-        super().__init__()
-        self.session = requests.Session()
-        self.session.verify = False  # Ignora SSL
+def update_env_key(env_path: Path, key: str, new_value: str):
+    lines = []
+    key_found = False
+
+    # Lê o arquivo linha a linha
+    with open(env_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            if line.startswith(f"{key}="):
+                lines.append(f'{key}="{new_value}"\n')
+                key_found = True
+            else:
+                lines.append(line)
+
+    # Se a chave não existia, adiciona no final
+    if not key_found:
+        lines.append(f"{key}={new_value}\n")
+
+    # Escreve de volta
+    with open(env_path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+
 
 def get_root_path():
     """Retorna o caminho absoluto para a raiz do projeto"""
@@ -32,6 +48,8 @@ def get_root_path():
         return Path(__file__).resolve().parent.parent
 
 ROOT_PATH = get_root_path()
+data_path = ROOT_PATH / "data"
+
 
 def create_authorization_code():
     try:
@@ -53,6 +71,8 @@ def create_authorization_code():
         credentials = flow.run_local_server(port=8080)
 
         # Mostra o refresh token
+        print("\n✅ Access Token gerado com sucesso:")
+        print(credentials.token)
         print("\n✅ Refresh Token gerado com sucesso:")
         print(credentials.refresh_token)
     
@@ -116,8 +136,136 @@ def exchange_code_for_tokens(auth_code):
         print(f"Erro ao trocar o código: {response.status_code}")
         print(response.text)
         return None, None
-    
-#exchange_code_for_tokens("4/1AVMBsJiRoy4QKAkcnqhVS1PYL6K3jhtKHAHw7hdGfFCMwtwbNwpqDOYiYLA")
 
-create_authorization_code()
+def update_access_token(client_id, client_secret, refresh_token):
+    url = "https://oauth2.googleapis.com/token"
 
+    payload = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "refresh_token": refresh_token,
+        "grant_type": "refresh_token"
+    }
+
+    response = requests.post(url, data=payload)
+    if response.status_code != 200:
+        raise Exception(f"Erro ao renovar access_token: {response.status_code} - {response.text}")
+
+    data = response.json()
+    access_token = data.get("access_token")
+    if not access_token:
+        raise Exception(f"Não foi possível obter access_token: {data}")
+
+    env_path = ROOT_PATH / '.env'
+    # env_vars = dotenv_values(env_path)
+    # env_vars['ACCESS_TOKEN_GOOGLE'] = access_token
+
+    update_env_key(env_path, "ACCESS_TOKEN_GOOGLE", access_token)
+
+    return access_token
+
+def get_query_response(mkt_query):
+    url = f"https://googleads.googleapis.com/v21/customers/{os.getenv('CUSTOMER_ID')}/googleAds:searchStream"
+    headers = {
+        "Authorization": f"Bearer {os.getenv('ACCESS_TOKEN_GOOGLE')}",
+        "developer-token": os.getenv('DEVELOPER_TOKEN'),
+        "Content-Type": "application/json"
+    }
+    body = {"query": mkt_query}
+
+    response = requests.post(url, headers=headers, json=body)
+    return response
+
+def google_mkt_data():
+    months_ago = today - relativedelta(months=2)
+    start_of_year = datetime(today.year-1, 1, 1)
+    init_date = months_ago.replace(day=1)
+
+    total_bytes_global = 0
+    current_start = start_of_year
+
+    # Caminho do arquivo final
+    data_path.mkdir(exist_ok=True)
+    caminho_arquivo = data_path / "google_ads_data.json"
+
+    with open(caminho_arquivo, "w", encoding="utf-8") as file:
+        file.write("[\n")  # início do JSON
+        first_row = True  # flag para adicionar vírgula entre rows
+
+        while current_start < today:
+            current_end = (current_start + relativedelta(months=1)) - relativedelta(days=1)
+            if current_end > today:
+                current_end = today
+
+            print(f"📅 Buscando dados de {current_start.strftime('%Y-%m-%d')} até {current_end.strftime('%Y-%m-%d')}")
+
+            mkt_query = f"""
+            SELECT
+                campaign.id,
+                campaign.name,
+                campaign.status,
+                segments.date,
+                segments.device,
+                segments.ad_network_type,
+                segments.hour,
+
+                metrics.impressions,
+                metrics.clicks,
+                metrics.ctr,
+                metrics.average_cpc,
+                metrics.cost_micros,
+                metrics.conversions
+             FROM campaign
+             WHERE segments.date BETWEEN '{current_start.strftime("%Y-%m-%d")}' AND '{current_end.strftime("%Y-%m-%d")}'
+             ORDER BY
+                segments.date
+            """
+
+            # url = f"https://googleads.googleapis.com/v21/customers/{os.getenv('CUSTOMER_ID')}/googleAds:searchStream"
+            # headers = {
+            #     "Authorization": f"Bearer {os.getenv('ACCESS_TOKEN_GOOGLE')}",
+            #     "developer-token": os.getenv('DEVELOPER_TOKEN'),
+            #     "Content-Type": "application/json"
+            # }
+            # body = {"query": mkt_query}
+            
+            response = get_query_response(mkt_query)
+            
+            print(f"📡 Status: {response.status_code}")
+            if response.status_code == 401:
+                print(f"Token vencido, iniciando atualização...")     
+                token = update_access_token(os.getenv('CLIENT_ID'), os.getenv('CLIENT_SECRET'), os.getenv('REFRESH_TOKEN'))
+                os.environ['ACCESS_TOKEN_GOOGLE'] = token
+                print(f"Token atualizizado com sucesso! ACCESS_TOKEN: {token}")
+
+                response = get_query_response(mkt_query)
+
+            if response.status_code != 200:
+                raise Exception(f"Erro na API Google Ads: {response.status_code} - {response.text}")
+
+            results = response.json()
+            total_bytes_month = 0
+
+            # escreve cada row direto no arquivo
+            for batch in results:
+                for row in batch.get("results", []):
+                    if not first_row:
+                        file.write(",\n")
+                    file.write(json.dumps(row, indent=4, ensure_ascii=False))
+                    first_row = False
+                    total_bytes_month += len(json.dumps(row, ensure_ascii=False).encode('utf-8'))
+                    total_bytes_global += len(json.dumps(row, ensure_ascii=False).encode('utf-8'))
+
+            print(f"✅ Mês {current_start.strftime('%Y-%m')} concluído. Bytes recebidos neste mês: {total_bytes_month}")
+
+            current_start = current_start + relativedelta(months=1)
+            time.sleep(1)  # evita estourar limites de requisição
+
+        file.write("\n]")  # final do JSON
+
+    print(f"\n📦 Tamanho total de bytes acumulado: {total_bytes_global}")
+    print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
+
+
+google_mkt_data()
+#create_authorization_code()
