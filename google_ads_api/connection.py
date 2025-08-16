@@ -1,3 +1,4 @@
+import inspect
 import sys
 import requests
 import json
@@ -37,7 +38,6 @@ def update_env_key(env_path: Path, key: str, new_value: str):
     with open(env_path, 'w', encoding='utf-8') as f:
         f.writelines(lines)
 
-
 def get_root_path():
     """Retorna o caminho absoluto para a raiz do projeto"""
     if getattr(sys, 'frozen', False):
@@ -49,7 +49,6 @@ def get_root_path():
 
 ROOT_PATH = get_root_path()
 data_path = ROOT_PATH / "data"
-
 
 def create_authorization_code():
     try:
@@ -148,17 +147,20 @@ def update_access_token(client_id, client_secret, refresh_token):
     }
 
     response = requests.post(url, data=payload)
+
     if response.status_code != 200:
-        raise Exception(f"Erro ao renovar access_token: {response.status_code} - {response.text}")
+        print("Function update_access_token()")
+        print(f"Erro ao renovar access_token: {response.status_code} - {response.text}")
+        return None
 
     data = response.json()
     access_token = data.get("access_token")
     if not access_token:
-        raise Exception(f"Não foi possível obter access_token: {data}")
+        print("Function update_access_token()")
+        print(f"Não foi possível obter access_token: {data}")
+        return None
 
     env_path = ROOT_PATH / '.env'
-    # env_vars = dotenv_values(env_path)
-    # env_vars['ACCESS_TOKEN_GOOGLE'] = access_token
 
     update_env_key(env_path, "ACCESS_TOKEN_GOOGLE", access_token)
 
@@ -208,26 +210,16 @@ def google_mkt_data():
                 segments.device,
                 segments.ad_network_type,
                 segments.hour,
-
                 metrics.impressions,
                 metrics.clicks,
                 metrics.ctr,
                 metrics.average_cpc,
                 metrics.cost_micros,
                 metrics.conversions
-             FROM campaign
-             WHERE segments.date BETWEEN '{current_start.strftime("%Y-%m-%d")}' AND '{current_end.strftime("%Y-%m-%d")}'
-             ORDER BY
-                segments.date
+            FROM campaign
+            WHERE segments.date BETWEEN '{current_start.strftime("%Y-%m-%d")}' AND '{current_end.strftime("%Y-%m-%d")}'
+            ORDER BY segments.date DESC
             """
-
-            # url = f"https://googleads.googleapis.com/v21/customers/{os.getenv('CUSTOMER_ID')}/googleAds:searchStream"
-            # headers = {
-            #     "Authorization": f"Bearer {os.getenv('ACCESS_TOKEN_GOOGLE')}",
-            #     "developer-token": os.getenv('DEVELOPER_TOKEN'),
-            #     "Content-Type": "application/json"
-            # }
-            # body = {"query": mkt_query}
             
             response = get_query_response(mkt_query)
             
@@ -235,10 +227,10 @@ def google_mkt_data():
             if response.status_code == 401:
                 print(f"Token vencido, iniciando atualização...")     
                 token = update_access_token(os.getenv('CLIENT_ID'), os.getenv('CLIENT_SECRET'), os.getenv('REFRESH_TOKEN'))
-                os.environ['ACCESS_TOKEN_GOOGLE'] = token
-                print(f"Token atualizizado com sucesso! ACCESS_TOKEN: {token}")
-
-                response = get_query_response(mkt_query)
+                if token:
+                    os.environ['ACCESS_TOKEN_GOOGLE'] = token
+                    print(f"Token atualizado com sucesso!")
+                    response = get_query_response(mkt_query)
 
             if response.status_code != 200:
                 raise Exception(f"Erro na API Google Ads: {response.status_code} - {response.text}")
@@ -267,5 +259,112 @@ def google_mkt_data():
     print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
 
 
-google_mkt_data()
+def google_mkt_data_2():
+    months_ago = today - relativedelta(months=2)
+    start_of_year = datetime(today.year-1, 1, 1)
+    init_date = months_ago.replace(day=1)
+
+    total_bytes_global = 0
+    current_start = start_of_year
+
+    # Caminho do arquivo final
+    data_path.mkdir(exist_ok=True)
+    caminho_arquivo = data_path / "google_ads_data_2.json"
+
+    with open(caminho_arquivo, "w", encoding="utf-8") as file:
+        file.write("[\n")  # início do JSON
+        first_row = True  # flag para adicionar vírgula entre rows
+
+        while current_start < today:
+            current_end = (current_start + relativedelta(months=1)) - relativedelta(days=1)
+            if current_end > today:
+                current_end = today
+
+            print(f"📅 Buscando dados de {current_start.strftime('%Y-%m-%d')} até {current_end.strftime('%Y-%m-%d')}")
+            
+            query_test = f"""
+                SELECT 
+                ad_group.id,
+                ad_group.name,
+                ad_group.campaign,
+                ad_group.type,
+                segments.date,
+                segments.hour,
+                metrics.active_view_cpm,
+                metrics.active_view_ctr,
+                metrics.active_view_impressions,
+                metrics.active_view_measurability,
+                metrics.active_view_measurable_cost_micros,
+                metrics.active_view_measurable_impressions,
+                metrics.average_cost,
+                metrics.average_cpc,
+                metrics.average_cpe,
+                metrics.average_cpm,
+                metrics.average_cpv,
+                metrics.clicks,
+                metrics.content_impression_share,
+                metrics.conversions,
+                metrics.ctr,
+                metrics.engagement_rate,
+                metrics.engagements,
+                metrics.impressions,
+                metrics.interaction_event_types,
+                metrics.interaction_rate,
+                metrics.interactions,
+                campaign.campaign_group,
+                campaign.id,
+                campaign.manual_cpa,
+                campaign.manual_cpm,
+                campaign.manual_cpv,
+                campaign.name,
+                campaign.status,
+                customer.id,
+                customer.currency_code,
+                customer.descriptive_name,
+                customer.status,
+                customer.time_zone
+                FROM ad_group
+                WHERE segments.date BETWEEN '{current_start.strftime("%Y-%m-%d")}' AND '{current_end.strftime("%Y-%m-%d")}'
+                ORDER BY segments.date DESC
+            """
+
+            response = get_query_response(query_test)
+            
+            print(f"📡 Status: {response.status_code}")
+            if response.status_code == 401:
+                print(f"Token vencido, iniciando atualização...")     
+                token = update_access_token(os.getenv('CLIENT_ID'), os.getenv('CLIENT_SECRET'), os.getenv('REFRESH_TOKEN'))
+                if token:
+                    os.environ['ACCESS_TOKEN_GOOGLE'] = token
+                    print(f"Token atualizado com sucesso!")
+                    response = get_query_response(query_test)
+
+            if response.status_code != 200:
+                raise Exception(f"Erro na API Google Ads: {response.status_code} - {response.text}")
+
+            results = response.json()
+            total_bytes_month = 0
+
+            # escreve cada row direto no arquivo
+            for batch in results:
+                for row in batch.get("results", []):
+                    if not first_row:
+                        file.write(",\n")
+                    file.write(json.dumps(row, indent=4, ensure_ascii=False))
+                    first_row = False
+                    total_bytes_month += len(json.dumps(row, ensure_ascii=False).encode('utf-8'))
+                    total_bytes_global += len(json.dumps(row, ensure_ascii=False).encode('utf-8'))
+
+            print(f"✅ Mês {current_start.strftime('%Y-%m')} concluído. Bytes recebidos neste mês: {total_bytes_month}")
+
+            current_start = current_start + relativedelta(months=1)
+            time.sleep(1)  # evita estourar limites de requisição
+
+        file.write("\n]")  # final do JSON
+
+    print(f"\n📦 Tamanho total de bytes acumulado: {total_bytes_global}")
+    print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
+
+google_mkt_data_2()
+#google_mkt_data()
 #create_authorization_code()
