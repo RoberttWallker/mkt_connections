@@ -1,4 +1,5 @@
 import inspect
+import certifi
 import sys
 import requests
 import json
@@ -16,6 +17,8 @@ import webbrowser
 
 load_dotenv()
 today = datetime.today()
+
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
 def update_env_key(env_path: Path, key: str, new_value: str):
     lines = []
@@ -109,6 +112,34 @@ def create_authorization_code():
             print(f"Ocorreu o seguninte erro: {e}\n")
             print("Verifique se o fluxo de autenticação está correto!")
 
+def create_authorization_code_2():
+    try:
+        print("Tentando criar pelo método local (run_local_server):\n")
+        flow = InstalledAppFlow.from_client_config(
+            {
+                "installed": {
+                    "client_id": os.getenv("CLIENT_ID"),
+                    "client_secret": os.getenv("CLIENT_SECRET"),
+                    "redirect_uris": ["http://localhost:8080/"],
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token"
+                }
+            },
+            scopes=["https://www.googleapis.com/auth/adwords"],
+        )
+
+        # Abre o navegador para autenticação e captura automaticamente o token
+        credentials = flow.run_local_server(port=8080)
+
+        print("\n✅ Access Token gerado com sucesso:")
+        print(credentials.token)
+        print("\n✅ Refresh Token gerado com sucesso:")
+        print(credentials.refresh_token)
+    
+    except Exception as e:
+        print(f"\nOcorreu o seguinte erro: {e}\n")
+        print("Verifique se o CLIENT_ID, CLIENT_SECRET e o redirect URI estão corretos no Google Cloud Console.")
+
 def exchange_code_for_tokens(auth_code):
     token_url = "https://oauth2.googleapis.com/token"
     
@@ -116,7 +147,7 @@ def exchange_code_for_tokens(auth_code):
         "code": auth_code,
         "client_id": os.getenv("CLIENT_ID"),
         "client_secret": os.getenv("CLIENT_SECRET"),
-        "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",  # Deve ser igual ao usado na geração do código
+        "redirect_uri": "http://localhost:8080/",  # Deve ser igual ao usado na geração do código
         "grant_type": "authorization_code"
     }
 
@@ -175,7 +206,7 @@ def get_query_response(mkt_query):
     }
     body = {"query": mkt_query}
 
-    response = requests.post(url, headers=headers, json=body)
+    response = requests.post(url, headers=headers, json=body, verify=False)
     return response
 
 def google_mkt_data():
@@ -257,7 +288,6 @@ def google_mkt_data():
 
     print(f"\n📦 Tamanho total de bytes acumulado: {total_bytes_global}")
     print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
-
 
 def google_mkt_data_2():
     months_ago = today - relativedelta(months=2)
@@ -365,6 +395,8 @@ def google_mkt_data_2():
     print(f"\n📦 Tamanho total de bytes acumulado: {total_bytes_global}")
     print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
 
-google_mkt_data_2()
+#google_mkt_data_2()
 #google_mkt_data()
-#create_authorization_code()
+#create_authorization_code_2()
+#exchange_code_for_tokens("4/0AVGzR1Cv79yDfs-EeSD6sWhdPGdx-YGKRmdTIBd6wIUXRJF-p_ENtou9jUKP1GJHKsT2eQ")
+#google_mkt_data_2()
