@@ -11,7 +11,7 @@ validity = os.getenv("ACCESS_TOKEN_VALIDITY")
 
 # Configuração do logging
 logging.basicConfig(
-    filename='log_check_token_validity.log',  # Nome do arquivo de log
+    filename='log_facebook_check_token_validity.log',  # Nome do arquivo de log
     level=logging.INFO,  # Nível mínimo de mensagens a registrar
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%d-%m-%Y %H:%M:%S',

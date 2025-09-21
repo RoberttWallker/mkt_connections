@@ -8,7 +8,7 @@ from graph_api import connection
 
 # Configuração do logging
 logging.basicConfig(
-    filename='log_download_all_data.log',  # Nome do arquivo de log
+    filename='log_facebook_download_all_data.log',  # Nome do arquivo de log
     level=logging.INFO,  # Nível mínimo de mensagens a registrar
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%d-%m-%Y %H:%M:%S',
