@@ -1,4 +1,4 @@
-query_1 = """
+query_principal = """
     SELECT 
     ad_group.id,
     ad_group.name,

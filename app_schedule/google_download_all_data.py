@@ -4,7 +4,7 @@ import logging
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from google_ads_api import connection
+from google_ads_api import connection, google_queries
 
 # Configuração do logging
 logging.basicConfig(
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     try:
         logging.info("\n####### INÍCIO: Marketing Data #######")
-        connection.google_mkt_data_2()
+        connection.google_ads_mkt_dataset(google_queries.query_principal, "google_ads_mkt_principal.json")
         logging.info("✅ Marketing Data finalizado com sucesso.")
         logging.info("####### FIM: Marketing Data #######\n")
 

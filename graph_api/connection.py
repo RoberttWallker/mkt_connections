@@ -110,9 +110,9 @@ def marketing_actions(fields):
 
         # Nome do arquivo
         if "reach" in fields:
-            caminho_arquivo = data_path / "mkt_principal.json"
+            caminho_arquivo = data_path / "facebook_mkt_principal.json"
         else:
-            caminho_arquivo = data_path / "mkt_act_and_act_values.json"
+            caminho_arquivo = data_path / "facebook_mkt_act_and_act_values.json"
 
         with open(caminho_arquivo, "w", encoding="utf-8") as file:
             file.write(json.dumps(all_data, indent=4, ensure_ascii=False))
@@ -141,11 +141,11 @@ def marketing_status(level):
     data_path.mkdir(exist_ok=True)  # Cria a pasta se não existir
     
     if level == "campaigns":
-        caminho_arquivo = data_path / "campaings_status.json"
+        caminho_arquivo = data_path / "facebook_campaings_status.json"
     if level == "adsets":
-        caminho_arquivo = data_path / "adsets_status.json"
+        caminho_arquivo = data_path / "facebook_adsets_status.json"
     if level == "ads":
-        caminho_arquivo = data_path / "ads_status.json"
+        caminho_arquivo = data_path / "facebook_ads_status.json"
 
     with open(caminho_arquivo, "w", encoding="utf-8") as file:
         file.write(json.dumps(result, indent=4, ensure_ascii=False))

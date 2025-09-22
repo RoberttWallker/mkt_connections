@@ -177,7 +177,7 @@ def update_access_token(client_id, client_secret, refresh_token):
         "grant_type": "refresh_token"
     }
 
-    response = requests.post(url, data=payload)
+    response = requests.post(url, data=payload, verify=False)
 
     if response.status_code != 200:
         print("Function update_access_token()")
@@ -291,7 +291,7 @@ def google_mkt_data():
 
 def google_mkt_data_2():
     months_ago = today - relativedelta(months=2)
-    start_of_year = datetime(today.year-1, 1, 1)
+    start_of_year = datetime(today.year-3, 1, 1)
     init_date = months_ago.replace(day=1)
 
     total_bytes_global = 0
@@ -299,7 +299,7 @@ def google_mkt_data_2():
 
     # Caminho do arquivo final
     data_path.mkdir(exist_ok=True)
-    caminho_arquivo = data_path / "google_ads_data_2.json"
+    caminho_arquivo = data_path / "google_ads_data_2_teste.json"
 
     with open(caminho_arquivo, "w", encoding="utf-8") as file:
         file.write("[\n")  # início do JSON
@@ -358,7 +358,43 @@ def google_mkt_data_2():
                 ORDER BY segments.date DESC
             """
 
-            response = get_query_response(query_test)
+
+            query_test_2 = f"""
+                        SELECT
+                        ad_group.id,
+                        ad_group_ad.ad.id,
+                        ad_group_ad.ad.name,
+                        ad_group_ad.status,
+                        ad_group_ad.policy_summary.approval_status,
+
+                        -- Métricas de performance
+                        metrics.impressions,
+                        metrics.clicks,
+                        metrics.ctr,
+                        metrics.average_cpc,
+                        metrics.average_cpm,
+                        metrics.average_cpv,
+                        metrics.average_cpe,
+                        metrics.cost_micros,
+                        
+                        -- Conversões
+                        metrics.conversions,
+                        metrics.conversions_value,
+                        metrics.all_conversions,
+                        metrics.cost_per_conversion,
+                        metrics.conversions_from_interactions_rate,
+
+                        -- Segmentações compatíveis
+                        segments.device,
+                        segments.date
+
+                    FROM ad_group_ad
+                    WHERE segments.date BETWEEN '{current_start.strftime("%Y-%m-%d")}'
+                                        AND '{current_end.strftime("%Y-%m-%d")}'
+                    ORDER BY segments.date DESC
+
+                """
+            response = get_query_response(query_test_2)
             
             print(f"📡 Status: {response.status_code}")
             if response.status_code == 401:
@@ -395,9 +431,9 @@ def google_mkt_data_2():
     print(f"\n📦 Tamanho total de bytes acumulado: {total_bytes_global}")
     print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
 
-def google_mkt_data_3(base_query):
+def google_ads_mkt_dataset(base_query: str, file_name: str):
     months_ago = today - relativedelta(months=2)
-    start_of_year = datetime(today.year-1, 1, 1)
+    start_of_year = datetime(today.year-3, 1, 1)
     init_date = months_ago.replace(day=1)
 
     total_bytes_global = 0
@@ -405,7 +441,7 @@ def google_mkt_data_3(base_query):
 
     # Caminho do arquivo final
     data_path.mkdir(exist_ok=True)
-    caminho_arquivo = data_path / "google_ads_data_2.json"
+    caminho_arquivo = data_path / file_name
 
     with open(caminho_arquivo, "w", encoding="utf-8") as file:
         file.write("[\n")  # início do JSON
@@ -461,11 +497,3 @@ def google_mkt_data_3(base_query):
     print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
 
 
-#google_mkt_data_2()
-#google_mkt_data()
-#create_authorization_code_2()
-#exchange_code_for_tokens("4/0AVGzR1Cv79yDfs-EeSD6sWhdPGdx-YGKRmdTIBd6wIUXRJF-p_ENtou9jUKP1GJHKsT2eQ")
-#google_mkt_data_2()
-
-import google_queries
-google_mkt_data_3(google_queries.query_1)
