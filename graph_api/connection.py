@@ -76,7 +76,7 @@ def marketing_actions(fields):
         total_bytes_month = 0
 
         while url:
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, verify=False)
             
             print(f"📡 Status: {response.status_code}")
 
@@ -129,7 +129,7 @@ def marketing_status(level):
         "access_token": ACCESS_TOKEN
     }
 
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, verify=False)
 
     print(f"📡 Status: {response.status_code}")
 
@@ -176,7 +176,8 @@ def convert_short_lived_token_to_long_lived_token(app_id, app_secret, short_live
 
     response = requests.get(
         f"https://graph.facebook.com/v23.0/oauth{ACCESS_TOKEN_PATH}",
-        params=params
+        params=params,
+        verify=False
     )
 
     if response.status_code == 200:
