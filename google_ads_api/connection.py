@@ -395,8 +395,77 @@ def google_mkt_data_2():
     print(f"\n📦 Tamanho total de bytes acumulado: {total_bytes_global}")
     print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
 
+def google_mkt_data_3(base_query):
+    months_ago = today - relativedelta(months=2)
+    start_of_year = datetime(today.year-1, 1, 1)
+    init_date = months_ago.replace(day=1)
+
+    total_bytes_global = 0
+    current_start = start_of_year
+
+    # Caminho do arquivo final
+    data_path.mkdir(exist_ok=True)
+    caminho_arquivo = data_path / "google_ads_data_2.json"
+
+    with open(caminho_arquivo, "w", encoding="utf-8") as file:
+        file.write("[\n")  # início do JSON
+        first_row = True  # flag para adicionar vírgula entre rows
+
+        while current_start < today:
+            current_end = (current_start + relativedelta(months=1)) - relativedelta(days=1)
+            if current_end > today:
+                current_end = today
+
+            print(f"📅 Buscando dados de {current_start.strftime('%Y-%m-%d')} até {current_end.strftime('%Y-%m-%d')}")
+
+            query = base_query.format(
+                start_date=current_start.strftime("%Y-%m-%d"),
+                end_date=current_end.strftime("%Y-%m-%d")
+            )
+
+            response = get_query_response(query)
+            
+            print(f"📡 Status: {response.status_code}")
+            if response.status_code == 401:
+                print(f"Token vencido, iniciando atualização...")     
+                token = update_access_token(os.getenv('CLIENT_ID'), os.getenv('CLIENT_SECRET'), os.getenv('REFRESH_TOKEN'))
+                if token:
+                    os.environ['ACCESS_TOKEN_GOOGLE'] = token
+                    print(f"Token atualizado com sucesso!")
+                    response = get_query_response(query)
+
+            if response.status_code != 200:
+                raise Exception(f"Erro na API Google Ads: {response.status_code} - {response.text}")
+
+            results = response.json()
+            total_bytes_month = 0
+
+            # escreve cada row direto no arquivo
+            for batch in results:
+                for row in batch.get("results", []):
+                    if not first_row:
+                        file.write(",\n")
+                    file.write(json.dumps(row, indent=4, ensure_ascii=False))
+                    first_row = False
+                    total_bytes_month += len(json.dumps(row, ensure_ascii=False).encode('utf-8'))
+                    total_bytes_global += len(json.dumps(row, ensure_ascii=False).encode('utf-8'))
+
+            print(f"✅ Mês {current_start.strftime('%Y-%m')} concluído. Bytes recebidos neste mês: {total_bytes_month}")
+
+            current_start = current_start + relativedelta(months=1)
+            time.sleep(1)  # evita estourar limites de requisição
+
+        file.write("\n]")  # final do JSON
+
+    print(f"\n📦 Tamanho total de bytes acumulado: {total_bytes_global}")
+    print("💾 Arquivo salvo com sucesso:", caminho_arquivo)
+
+
 #google_mkt_data_2()
 #google_mkt_data()
 #create_authorization_code_2()
 #exchange_code_for_tokens("4/0AVGzR1Cv79yDfs-EeSD6sWhdPGdx-YGKRmdTIBd6wIUXRJF-p_ENtou9jUKP1GJHKsT2eQ")
 #google_mkt_data_2()
+
+import google_queries
+google_mkt_data_3(google_queries.query_1)

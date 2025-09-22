@@ -1,18 +1,27 @@
 from pathlib import Path
 
+#---------------------------------------------------------------------------------------
+# Pastas principais
 ROOT_PATH = Path(__file__).resolve().parent.parent
 schedule_path = ROOT_PATH / "app_schedule"
 bat_vbs_files_path = "bat_vbs_files"
 
+#---------------------------------------------------------------------------------------
+# Pastas secundárias
 graph_api_path = ROOT_PATH / "graph_api"
 google_ads_api_path = ROOT_PATH / "google_ads_api"
 
+#---------------------------------------------------------------------------------------
+# Arquivos principais
+# Facebook
 facebook_download_all_data_path = schedule_path / "facebook_download_all_data.py"
 facebook_check_token_validity_path = schedule_path / "facebook_check_token_validity.py"
 gui_update_token_path = graph_api_path / "gui_tkinter.pyw"
 
+# Google
 google_download_all_data_path = schedule_path / "google_download_all_data.py"
 
+#---------------------------------------------------------------------------------------
 # FUNÇÕES DE AGENDAMENTO FACEBOOK
 def facebook_automation():
     bat_file = schedule_path / bat_vbs_files_path / "facebook_schedule.bat"
