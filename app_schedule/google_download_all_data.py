@@ -18,11 +18,27 @@ logging.basicConfig(
 if __name__ == "__main__":
     logging.info("Iniciando o download dos arquivos...")
 
-    try:
-        logging.info("\n####### INÍCIO: Marketing Data #######")
-        connection.google_ads_mkt_dataset(google_queries.query_principal, "google_ads_mkt_principal.json")
-        logging.info("✅ Marketing Data finalizado com sucesso.")
-        logging.info("####### FIM: Marketing Data #######\n")
+    # try:
+    #     logging.info("####### INÍCIO: Marketing Data #######")
+    #     try:
+    #         connection.google_ads_mkt_dataset(google_queries.query_principal, "google_ads_mkt_principal.json")
+    #         logging.info("✅ Marketing Data finalizado com sucesso.")
+    #         logging.info("####### FIM: Marketing Data #######\n")
+    #     except Exception as e:
+    #         print(f"{e.__class__.__name__}: {e}")
+    #         logging.info(f"❌ Erro durante execução de google_mkt_data_2() - {e}\n")
+    #         logging.info("####### FIM: Marketing Data #######\n")
 
-    except Exception as e:
-        logging.exception(f"❌ Erro durante execução de google_mkt_data_2() - {e}\n")
+    # except Exception as e:
+    #     logging.exception(f"❌ Erro durante execução de google_mkt_data_2() - {e}\n")
+
+# ---------------- Marketing Data ----------------
+logging.info("####### INÍCIO: Marketing Data #######")
+try:
+    connection.google_ads_mkt_dataset(google_queries.query_principal, "google_ads_mkt_principal.json")
+    logging.info("✅ Marketing Data finalizado com sucesso.")
+except Exception as e:
+    print(f"{e.__class__.__name__}: {e}")
+    logging.exception(f"❌ Erro durante execução de google_mkt_data_2() - {e}\n")
+finally:
+    logging.info("####### FIM: Marketing Data #######\n")

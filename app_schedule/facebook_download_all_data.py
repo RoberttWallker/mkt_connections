@@ -28,36 +28,83 @@ if __name__ == "__main__":
         "spend","impressions","reach","cpm","ctr","ad_id"
     ]
     
+    # try:
+    #     logging.info("####### INÍCIO: Marketing Actions #######")
+    #     try:
+    #         connection.marketing_actions(fields_marketing_actions)
+    #         logging.info("✅ Marketing Actions finalizado com sucesso.")
+    #         logging.info("####### FIM: Marketing Actions #######\n")
+    #     except Exception as e:
+    #         print(f"{e.__class__.__name__}: {e}")
+    #         logging.exception(f"❌ Erro durante execução de marketing_actions() [Actions] - {e}\n")
+    #         logging.info("####### FIM: Marketing Actions #######\n")
+
+    # except Exception as e:
+    #     logging.exception(f"❌ Erro durante execução de marketing_actions() [Actions] - {e}\n")
+
+    # # -----------------------------------------------
+
+    # try:
+    #     logging.info("####### INÍCIO: Marketing Principal #######")
+    #     try:
+    #         connection.marketing_actions(fields_principal)
+    #         logging.info("✅ Marketing Principal finalizado com sucesso.")
+    #         logging.info("####### FIM: Marketing Principal #######\n")
+    #     except Exception as e:
+    #         print(f"{e.__class__.__name__}: {e}")
+    #         logging.exception(f"❌ Erro durante execução de marketing_actions() [Actions] - {e}\n")
+    #         logging.info("####### FIM: Marketing Actions #######\n")
+
+
+    # except Exception as e:
+    #     logging.exception(f"❌ Erro durante execução de marketing_actions() [Principal] - {e}\n")
+
+    # # -----------------------------------------------
+
+    # try:
+    #     levels = ["ads", "adsets", "campaigns"]  # corrigido 'campaings'
+
+    #     for level in levels:
+    #         logging.info(f"\n####### INÍCIO: Marketing Status - {level.upper()} #######")
+    #         connection.marketing_status(level)
+    #         logging.info(f"✅ Marketing Status para {level.upper()} finalizado com sucesso.")
+    #         logging.info(f"####### FIM: Marketing Status - {level.upper()} #######\n")
+
+    # except Exception as e:
+    #     logging.exception(f"❌ Erro durante execução de marketing_status() - {e}\n")
+
+# ---------------- Marketing Actions ----------------
+logging.info("####### INÍCIO: Marketing Actions #######")
+try:
+    connection.marketing_actions(fields_marketing_actions)
+    logging.info("✅ Marketing Actions finalizado com sucesso.")
+except Exception as e:
+    print(f"{e.__class__.__name__}: {e}")
+    logging.exception(f"❌ Erro durante execução de marketing_actions() [Actions] - {e}\n")
+finally:
+    logging.info("####### FIM: Marketing Actions #######\n")
+
+# ---------------- Marketing Principal ----------------
+logging.info("####### INÍCIO: Marketing Principal #######")
+try:
+    connection.marketing_actions(fields_principal)
+    logging.info("✅ Marketing Principal finalizado com sucesso.")
+except Exception as e:
+    print(f"{e.__class__.__name__}: {e}")
+    logging.exception(f"❌ Erro durante execução de marketing_actions() [Principal] - {e}\n")
+finally:
+    logging.info("####### FIM: Marketing Principal #######\n")
+
+# ---------------- Marketing Status ----------------
+levels = ["ads", "adsets", "campaigns"]  # corrigido 'campaings'
+
+for level in levels:
+    logging.info(f"\n####### INÍCIO: Marketing Status - {level.upper()} #######")
     try:
-        logging.info("\n####### INÍCIO: Marketing Actions #######")
-        connection.marketing_actions(fields_marketing_actions)
-        logging.info("✅ Marketing Actions finalizado com sucesso.")
-        logging.info("####### FIM: Marketing Actions #######\n")
-
+        connection.marketing_status(level)
+        logging.info(f"✅ Marketing Status para {level.upper()} finalizado com sucesso.")
     except Exception as e:
-        logging.exception(f"❌ Erro durante execução de marketing_actions() [Actions] - {e}\n")
-
-    # -----------------------------------------------
-
-    try:
-        logging.info("\n####### INÍCIO: Marketing Principal #######")
-        connection.marketing_actions(fields_principal)
-        logging.info("✅ Marketing Principal finalizado com sucesso.")
-        logging.info("####### FIM: Marketing Principal #######\n")
-
-    except Exception as e:
-        logging.exception(f"❌ Erro durante execução de marketing_actions() [Principal] - {e}\n")
-
-    # -----------------------------------------------
-
-    try:
-        levels = ["ads", "adsets", "campaigns"]  # corrigido 'campaings'
-
-        for level in levels:
-            logging.info(f"\n####### INÍCIO: Marketing Status - {level.upper()} #######")
-            connection.marketing_status(level)
-            logging.info(f"✅ Marketing Status para {level.upper()} finalizado com sucesso.")
-            logging.info(f"####### FIM: Marketing Status - {level.upper()} #######\n")
-
-    except Exception as e:
+        print(f"{e.__class__.__name__}: {e}")
         logging.exception(f"❌ Erro durante execução de marketing_status() - {e}\n")
+    finally:
+        logging.info(f"####### FIM: Marketing Status - {level.upper()} #######\n")

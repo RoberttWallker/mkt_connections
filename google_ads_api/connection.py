@@ -151,7 +151,7 @@ def exchange_code_for_tokens(auth_code):
         "grant_type": "authorization_code"
     }
 
-    response = requests.post(token_url, data=data, verify=False)
+    response = requests.post(token_url, data=data, verify=True)
     if response.status_code == 200:
         tokens = response.json()
         access_token = tokens.get("access_token")
@@ -177,7 +177,7 @@ def update_access_token(client_id, client_secret, refresh_token):
         "grant_type": "refresh_token"
     }
 
-    response = requests.post(url, data=payload, verify=False)
+    response = requests.post(url, data=payload, verify=True)
 
     if response.status_code != 200:
         print("Function update_access_token()")
@@ -206,7 +206,7 @@ def get_query_response(mkt_query):
     }
     body = {"query": mkt_query}
 
-    response = requests.post(url, headers=headers, json=body, verify=False)
+    response = requests.post(url, headers=headers, json=body, verify=True)
     return response
 
 def google_mkt_data():

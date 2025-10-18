@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 
 #---------------------------------------------------------------------------------------
 # Pastas principais
@@ -139,5 +140,10 @@ def main():
     google_automation()
 
 if __name__ == "__main__":
-    print("Iniciando o aplicativo.")
-    main()
+    print("\nCriando arquivos de automação de download.\n")
+    try:
+        main()
+        time.sleep(2)
+        print("Arquivos criados com sucesso!\n")
+    except Exception as e:
+        print(f"{e.__class__.__name__}: {e}")
